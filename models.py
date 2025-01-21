@@ -8,9 +8,4 @@ class User(Base):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    email: Mapped[str] = mapped_column(String, ForeignKey("tree_tags.id"), primary_key=True)
-
-    tree_view: Mapped["TreeView"] = relationship(
-        "TreeView",
-        back_populates="view_tags"
-    )
+    email: Mapped[str] = mapped_column(String, nullable=False)

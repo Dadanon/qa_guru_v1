@@ -48,6 +48,14 @@ class UserUpdateResponse(UserCreate):
     updatedAt: datetime
 
 
+class UserPatch(UserUpdate):
+    pass
+
+
+class UserPatchResponse(UserUpdateResponse):
+    pass
+
+
 class LoginForm(Initial):
     email: str
     password: str
