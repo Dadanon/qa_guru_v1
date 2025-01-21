@@ -1,12 +1,9 @@
 from typing import List
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from datetime import datetime
 
-
-class Initial(BaseModel):
-    """An initial schema that only implements model_config settings"""
-    model_config = ConfigDict(from_attributes=True)
+from schemas import Initial
 
 
 class User(Initial):
