@@ -13,6 +13,7 @@ requests = "*"
 alembic = "*"
 psycopg2 = "*"
 uvicorn = "*"
+httpx = "*"
 
 [dev-packages]
 
