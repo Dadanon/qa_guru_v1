@@ -10,7 +10,7 @@ from . import crud
 from database import get_db
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/authors", tags=["Authors"])
 
 
 @router.get('', response_model=List[AuthorListed], status_code=status.HTTP_200_OK)
