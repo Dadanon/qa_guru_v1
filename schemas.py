@@ -72,3 +72,7 @@ class BookCreate(Initial):
     title: str
     price: float
     author_id: int
+
+
+class BaseResponse(Initial):
+    detail: str
