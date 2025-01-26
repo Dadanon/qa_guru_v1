@@ -1,19 +1,29 @@
+import random
+
 import pytest
-from pydantic import ValidationError
+from fastapi_pagination import set_params, Params
 from starlette import status
 from starlette.testclient import TestClient
 
-from schemas import AuthorDetail, AuthorUpdate, AuthorCreate
+from schemas import AuthorUpdate, AuthorCreate
 
 
-def test_get_authors(new_author, client: TestClient):
+@pytest.mark.parametrize("page_num, size, expected_count, page_count", [
+    (1, 10, 10, 2),
+    (2, 10, 2, 2),
+    (1, 20, 12, 1),
+    (2, 12, 0, 1)
+])
+def test_get_authors_paginated(page_num: int, size: int, expected_count: int, page_count: int, new_author, client: TestClient):
     """
-    Тестируем получение авторов на тестовой базе уже с пагинацией
-    Создаём 2 авторов и проверяем количество
+    Тестируем получение авторов на тестовой базе с пагинацией
+    Создаём 12 авторов и проверяем количество
     """
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    author_2 = new_author('Aqua', 'Marine')
+    author_quantity = 12
+    for i in range(author_quantity):
+        new_author(f'Super_{i}', f'Man_{i}')
+    set_params(Params(page=page_num, size=size))
 
     # Act
     response = client.get('/api/authors')
@@ -21,10 +31,11 @@ def test_get_authors(new_author, client: TestClient):
 
     # Assert
     assert response.status_code == status.HTTP_200_OK
-    assert len(data) == 2
-    assert data[0]['id'] == author_1.id
-    assert data[0]['full_name'] == author_1.full_name
-    assert data[1]['full_name'] == author_2.full_name
+    assert len(data['items']) == expected_count
+    assert data['total'] == author_quantity
+    assert data['page'] == page_num
+    assert data['size'] == size
+    assert data['pages'] == page_count
 
 
 def test_get_author(new_author, new_book, client: TestClient):
@@ -50,15 +61,23 @@ def test_get_author(new_author, new_book, client: TestClient):
     assert data['books'][1] == book_2.title
 
 
-def test_get_author_books(new_author, new_book, client: TestClient):
+@pytest.mark.parametrize("page_num, size, expected_count, page_count", [
+    (1, 10, 10, 2),
+    (2, 10, 2, 2),
+    (1, 20, 12, 1),
+    (2, 12, 0, 1)
+])
+def test_get_author_books_paginated(page_num: int, size: int, expected_count: int, page_count: int, new_author, new_book, client: TestClient):
     """
-    Тестируем получение подробной информации о книгах автора на тестовой базе
-    Создаём автора, пару книг для него и проверяем инфу
+    Тестируем пагинацию при получении книг автора
+    Создаём автора, 12 книг для него и проверяем инфу
     """
     # Arrange
     author_1 = new_author('Super', 'Man')
-    book_1 = new_book('About all', 15.3, author_1.id)
-    book_2 = new_book('Nothing to do', 173.2, author_1.id)
+    book_quantity = 12
+    for i in range(book_quantity):
+        new_book(title=f'Book_{i}', price=random.randint(1, 20), author_id=author_1.id)
+    set_params(Params(page=page_num, size=size))
 
     # Act
     response = client.get(f'/api/authors/{author_1.id}/books')
@@ -66,10 +85,11 @@ def test_get_author_books(new_author, new_book, client: TestClient):
 
     # Assert
     assert response.status_code == status.HTTP_200_OK
-    assert data['total'] == 2
-    assert len(data['books']) == 2
-    assert data['books'][0]['title'] == book_1.title
-    assert data['books'][1]['title'] == book_2.title
+    assert len(data['items']) == expected_count
+    assert data['total'] == book_quantity
+    assert data['page'] == page_num
+    assert data['size'] == size
+    assert data['pages'] == page_count
 
 
 def test_update_author(new_author, new_book, client: TestClient):
@@ -127,10 +147,3 @@ def test_delete_author(new_author, client: TestClient):
     # Assert
     assert response.status_code == status.HTTP_200_OK
     assert data == author_1.id
-
-
-def test_get_paginated_authors(new_author, client: TestClient):
-    """
-    Тестируем пагинацию на списке авторов: ожидаемое количество, корректное количество страниц при разном размере страницы,
-    """
-    pass

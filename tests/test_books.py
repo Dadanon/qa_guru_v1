@@ -1,31 +1,42 @@
+import random
+
+import pytest
+from fastapi_pagination import set_params, Params
 from starlette import status
 from starlette.testclient import TestClient
 
 from schemas import BookUpdate, BookCreate
 
 
-def test_get_books(new_author, new_book, client: TestClient):
+@pytest.mark.parametrize("page_num, size, expected_count, page_count", [
+    (1, 10, 10, 2),
+    (2, 10, 2, 2),
+    (1, 20, 12, 1),
+    (2, 12, 0, 1)
+])
+def test_get_books_paginated(page_num: int, size: int, expected_count: int, page_count: int, new_author, new_book, client: TestClient):
     """
-    Тестируем получение книг на тестовой базе
-    Создаём 2 авторов, каждому создаём по 1 книге и проверяем количество
+    Тестируем пагинацию при получении общего количества книг
+    Создаём 12 авторов, по 1 книге на каждого и тестируем инфу
     """
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    author_2 = new_author('Aqua', 'Marine')
-    book_1 = new_book('About all', 15.3, author_1.id)
-    book_2 = new_book('Nothing to do', 173.2, author_2.id)
+    item_quantity = 12
+    for i in range(item_quantity):
+        author = new_author(f'Mega_{i}', f'Man_{i}')
+        new_book(title=f'Book_{i}', price=random.randint(1, 20), author_id=author.id)
+    set_params(Params(page=page_num, size=size))
 
     # Act
-    response = client.get('/api/books')
+    response = client.get(f'/api/books')
     data = response.json()
 
     # Assert
     assert response.status_code == status.HTTP_200_OK
-    assert len(data) == 2
-    assert data[0]['id'] == book_1.id
-    assert data[1]['id'] == book_2.id
-    assert data[0]['title'] == book_1.title
-    assert data[1]['title'] == book_2.title
+    assert len(data['items']) == expected_count
+    assert data['total'] == item_quantity
+    assert data['page'] == page_num
+    assert data['size'] == size
+    assert data['pages'] == page_count
 
 
 def test_get_book(new_author, new_book, client: TestClient):
