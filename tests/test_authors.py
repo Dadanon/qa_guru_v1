@@ -8,7 +8,7 @@ from schemas import AuthorDetail, AuthorUpdate, AuthorCreate
 
 def test_get_authors(new_author, client: TestClient):
     """
-    Тестируем получение авторов на тестовой базе
+    Тестируем получение авторов на тестовой базе уже с пагинацией
     Создаём 2 авторов и проверяем количество
     """
     # Arrange
@@ -127,3 +127,10 @@ def test_delete_author(new_author, client: TestClient):
     # Assert
     assert response.status_code == status.HTTP_200_OK
     assert data == author_1.id
+
+
+def test_get_paginated_authors(new_author, client: TestClient):
+    """
+    Тестируем пагинацию на списке авторов: ожидаемое количество, корректное количество страниц при разном размере страницы,
+    """
+    pass

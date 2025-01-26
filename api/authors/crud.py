@@ -16,10 +16,10 @@ def get_author_by_id(db: Session, author_id: int) -> AuthorDetail:
     return AuthorDetail.model_validate(db_author)
 
 
-def get_author_books(db: Session, author_id: int) -> BookList:
+def get_author_books(db: Session, author_id: int) -> List[BookListed]:
     check_model(db, Author, author_id)
     db_author_books: List[Book] = db.query(Book).filter_by(author_id=author_id).all()
-    return BookList(total=len(db_author_books), books=[BookListed.model_validate(book) for book in db_author_books])
+    return [BookListed.model_validate(book) for book in db_author_books]
 
 
 def update_author(db: Session, author_id: int, form: AuthorUpdate) -> AuthorDetail:

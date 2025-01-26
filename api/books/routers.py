@@ -1,6 +1,5 @@
-from typing import List
-
 from fastapi import APIRouter, Depends
+from fastapi_pagination import Page, paginate, set_params, Params
 from sqlalchemy.orm import Session
 from fastapi import status
 
@@ -13,9 +12,12 @@ from database import get_db
 router = APIRouter(prefix="/api/books", tags=["Books"])
 
 
-@router.get('', response_model=List[BookListed], status_code=status.HTTP_200_OK)
+set_params(Params(page=1, size=10))
+
+
+@router.get('', response_model=Page[BookListed], status_code=status.HTTP_200_OK)
 def get_books(db: Session = Depends(get_db)):
-    return get_result(db, crud.get_books)
+    return paginate(get_result(db, crud.get_books))
 
 
 @router.get('/{book_id}', response_model=BookDetail, status_code=status.HTTP_200_OK)
