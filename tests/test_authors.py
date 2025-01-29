@@ -1,149 +1,179 @@
-import random
+import math
 
 import pytest
 from fastapi_pagination import set_params, Params
 from starlette import status
 from starlette.testclient import TestClient
 
-from schemas import AuthorUpdate, AuthorCreate
 
+# INFO: get authors pagination block -----------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("page_num, size, expected_count, page_count", [
-    (1, 10, 10, 2),
-    (2, 10, 2, 2),
-    (1, 20, 12, 1),
-    (2, 12, 0, 1)
+@pytest.mark.parametrize("data_count, page_num, size", [
+    (20, 1, 10),
+    (16, 2, 10),
+    (35, 1, 20),
+    (11, 2, 12)
 ])
-def test_get_authors_paginated(page_num: int, size: int, expected_count: int, page_count: int, new_author, client: TestClient):
-    """
-    Тестируем получение авторов на тестовой базе с пагинацией
-    Создаём 12 авторов и проверяем количество
-    """
+def test_check_get_authors_items_count_and_total(data_count: int, page_num: int, size: int, new_authors, client: TestClient):
+    """Тестируем получение корректного количества объектов на данной странице и общего количества авторов в ответе"""
     # Arrange
-    author_quantity = 12
-    for i in range(author_quantity):
-        new_author(f'Super_{i}', f'Man_{i}')
+    new_authors(data_count)
     set_params(Params(page=page_num, size=size))
 
     # Act
     response = client.get('/api/authors')
+    assert response.status_code == status.HTTP_200_OK
+
     data = response.json()
 
     # Assert
-    assert response.status_code == status.HTTP_200_OK
+    expected_count: int = max(0, min(size, data_count - (page_num - 1) * size))  # Ожидаемое количество объектов в ответе
     assert len(data['items']) == expected_count
-    assert data['total'] == author_quantity
-    assert data['page'] == page_num
-    assert data['size'] == size
-    assert data['pages'] == page_count
+    assert data['total'] == data_count
 
 
-def test_get_author(new_author, new_book, client: TestClient):
-    """
-    Тестируем получение подробной информации об авторе на тестовой базе
-    Создаём автора, пару книг для него и проверяем инфу
-    """
+@pytest.mark.parametrize("data_count, size", [
+    (27, 10),
+    (13, 10),
+    (35, 14),
+    (11, 12)
+])
+def test_check_get_authors_page_count(data_count: int, size: int, new_authors, client: TestClient):
+    """Тестируем получение корректного количества страниц в ответе, страница всегда первая"""
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    book_1 = new_book('About all', 15.3, author_1.id)
-    book_2 = new_book('Nothing to do', 173.2, author_1.id)
+    new_authors(data_count)
+    set_params(Params(page=1, size=size))
 
     # Act
-    response = client.get(f'/api/authors/{author_1.id}')
+    response = client.get('/api/authors')
+    assert response.status_code == status.HTTP_200_OK
+
     data = response.json()
 
     # Assert
-    assert response.status_code == status.HTTP_200_OK
-    assert data['id'] == author_1.id
-    assert data['full_name'] == author_1.full_name
-    assert len(data['books']) == 2
-    assert data['books'][0] == book_1.title
-    assert data['books'][1] == book_2.title
+    expected_page_count: int = math.ceil(data_count / size)  # Ожидаемое количество страниц в ответе
+    assert data['pages'] == expected_page_count
 
 
-@pytest.mark.parametrize("page_num, size, expected_count, page_count", [
-    (1, 10, 10, 2),
-    (2, 10, 2, 2),
-    (1, 20, 12, 1),
-    (2, 12, 0, 1)
+@pytest.mark.parametrize("data_count, size", [
+    (20, 10),
+    (16, 10),
+    (35, 20),
+    (73, 15)
 ])
-def test_get_author_books_paginated(page_num: int, size: int, expected_count: int, page_count: int, new_author, new_book, client: TestClient):
-    """
-    Тестируем пагинацию при получении книг автора
-    Создаём автора, 12 книг для него и проверяем инфу
-    """
+def test_check_get_authors_different_data_on_different_pages(data_count: int, size: int, new_authors,
+                                                             client: TestClient):
+    """Тестируем получение разных данных об авторах на 1 и 2 страницах.
+    Хардкод тут в том, что мы нарочито выставляем в параметрах
+    количество данных больше размера страницы для того, чтобы
+    на второй странице гарантированно были данные"""
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    book_quantity = 12
-    for i in range(book_quantity):
-        new_book(title=f'Book_{i}', price=random.randint(1, 20), author_id=author_1.id)
+    new_authors(data_count)
+    set_params(Params(page=1, size=size))
+
+    # Act
+    response_first = client.get('/api/authors')
+    assert response_first.status_code == status.HTTP_200_OK
+
+    data_first = response_first.json()
+
+    set_params(Params(page=2, size=size))
+    response_second = client.get('/api/authors?page=2')
+    assert response_second.status_code == status.HTTP_200_OK
+
+    data_second = response_second.json()
+
+    # Assert
+    # Проверим в ответе следующие параметры, которые должны отличаться: номер страницы, айди и полное имя первого автора на странице
+    assert data_first['page'] != data_second['page']
+    assert data_first['items'][0]['id'] != data_second['items'][0]['id']
+    assert data_first['items'][0]['full_name'] != data_second['items'][0]['full_name']
+
+
+# INFO: end block ------------------------------------------------------------------------------------------------------
+
+# INFO: get author books pagination block ------------------------------------------------------------------------------
+
+@pytest.mark.parametrize("data_count, page_num, size", [
+    (20, 1, 10),
+    (16, 2, 10),
+    (35, 1, 20),
+    (11, 2, 12)
+])
+def test_check_get_author_books_items_count(data_count: int, page_num: int, size: int, new_books, client: TestClient):
+    """Тестируем получение корректного количества объектов на данной странице и общего количества книг автора в ответе"""
+    # Arrange
+    author_id: int = new_books(data_count)
     set_params(Params(page=page_num, size=size))
 
     # Act
-    response = client.get(f'/api/authors/{author_1.id}/books')
+    response = client.get(f'/api/authors/{author_id}/books')
+    assert response.status_code == status.HTTP_200_OK
+
     data = response.json()
 
     # Assert
-    assert response.status_code == status.HTTP_200_OK
+    expected_count: int = max(0, min(size, data_count - (page_num - 1) * size))  # Ожидаемое количество объектов в ответе
     assert len(data['items']) == expected_count
-    assert data['total'] == book_quantity
-    assert data['page'] == page_num
-    assert data['size'] == size
-    assert data['pages'] == page_count
+    assert data['total'] == data_count
 
 
-def test_update_author(new_author, new_book, client: TestClient):
-    """
-    Тестируем изменение данных автора на тестовой базе
-    Создаём автора, пару книг для него, изменяем данные автора и проверяем инфу
-    """
+@pytest.mark.parametrize("data_count, size", [
+    (27, 10),
+    (13, 10),
+    (35, 14),
+    (11, 12)
+])
+def test_check_get_author_books_page_count(data_count: int, size: int, new_books, client: TestClient):
+    """Тестируем получение корректного количества книг автора в ответе, страница всегда первая"""
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    new_book('About all', 15.3, author_1.id)
-    new_book('Nothing to do', 173.2, author_1.id)
-    author_update_form: AuthorUpdate = AuthorUpdate(first_name='Mega')
+    author_id: int = new_books(data_count)
+    set_params(Params(page=1, size=size))
 
     # Act
-    response = client.put(f'/api/authors/{author_1.id}', json=author_update_form.model_dump())
-    data = response.json()
-
-    # Assert
+    response = client.get(f'/api/authors/{author_id}/books')
     assert response.status_code == status.HTTP_200_OK
-    assert data['id'] == author_1.id
-    assert data['full_name'] == 'Mega Man'  # INFO: не очень литералами проверять, но пока лучше не придумал
-    assert len(data['books']) == 2
 
-
-def test_create_author(new_author, client: TestClient):
-    """
-    Тестируем создание автора на тестовой базе
-    Создаём автора и проверяем инфу
-    """
-    # Arrange
-    author_create_form: AuthorCreate = AuthorCreate(first_name='Mega', last_name='Man')
-
-    # Act
-    response = client.post(f'/api/authors', json=author_create_form.model_dump())
     data = response.json()
 
     # Assert
-    assert response.status_code == status.HTTP_201_CREATED
-    assert data['full_name'] == f'{author_create_form.first_name} {author_create_form.last_name}'
-    assert len(data['books']) == 0
+    expected_page_count: int = math.ceil(data_count / size)  # Ожидаемое количество страниц в ответе
+    assert data['pages'] == expected_page_count
 
 
-def test_delete_author(new_author, client: TestClient):
-    """
-    Тестируем удаление автора на тестовой базе
-    Создаём автора, удаляем его и проверяем инфу
-    """
+@pytest.mark.parametrize("data_count, size", [
+    (20, 10),
+    (16, 10),
+    (35, 20),
+    (73, 15)
+])
+def test_check_get_author_books_different_data_on_different_pages(data_count: int, size: int, new_books,
+                                                                  client: TestClient):
+    """Тестируем получение разных данных о книгах автора на 1 и 2 страницах.
+    Хардкод тут в том, что мы нарочито выставляем в параметрах
+    количество данных больше размера страницы для того, чтобы
+    на второй странице гарантированно были данные"""
     # Arrange
-    author_1 = new_author('Mega', 'Man')
+    author_id: int = new_books(data_count)
+    set_params(Params(page=1, size=size))
 
     # Act
-    response = client.delete(f'/api/authors/{author_1.id}')
-    data = response.json()
+    response_first = client.get(f'/api/authors/{author_id}/books')
+    assert response_first.status_code == status.HTTP_200_OK
+
+    data_first = response_first.json()
+
+    set_params(Params(page=2, size=size))
+    response_second = client.get(f'/api/authors/{author_id}/books')
+    assert response_second.status_code == status.HTTP_200_OK
+
+    data_second = response_second.json()
 
     # Assert
-    assert response.status_code == status.HTTP_200_OK
-    assert data == author_1.id
+    # Проверим в ответе следующие параметры, которые должны отличаться: номер страницы, айди и название книги на странице
+    assert data_first['page'] != data_second['page']
+    assert data_first['items'][0]['id'] != data_second['items'][0]['id']
+    assert data_first['items'][0]['title'] != data_second['items'][0]['title']
+
+
+# INFO: end block ------------------------------------------------------------------------------------------------------

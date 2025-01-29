@@ -1,3 +1,6 @@
+import random
+from typing import List
+
 import pytest
 from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import Session
@@ -46,6 +49,21 @@ def new_author_fixture(session: Session):
     yield _new_author
 
 
+@pytest.fixture(name="new_authors")
+def new_authors_fixture(new_author):
+    """Создаём некоторое количество новых авторов"""
+    def _new_authors(author_quantity: int):
+        if author_quantity <= 1:
+            return []
+        author_list: List[AuthorDetail] = []
+        for i in range(author_quantity):
+            author = new_author(first_name=f'Test_author_{i}', last_name=f'The_best_{i}')
+            author_list.append(author)
+        return author_list
+
+    yield _new_authors
+
+
 @pytest.fixture(name="new_book")
 def new_book_fixture(session: Session):
     """Создаём новую книгу"""
@@ -58,3 +76,19 @@ def new_book_fixture(session: Session):
         return BookDetail.model_validate(book)
 
     yield _new_book
+
+
+@pytest.fixture(name="new_books")
+def new_books_fixture(new_book, new_author):
+    """Создаём некоторое количество новых книг одного автора. Возвращаем id этого автора"""
+    def _new_books(book_quantity: int):
+        if book_quantity < 1:
+            return []
+        book_list: List[BookDetail] = []
+        author = new_author(first_name='Test_author', last_name='The_best')
+        for i in range(book_quantity):
+            book = new_book(title=f'Test_book_{i}', price=random.randint(0, 20), author_id=author.id)
+            book_list.append(book)
+        return author.id
+
+    yield _new_books

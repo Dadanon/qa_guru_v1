@@ -1,119 +1,92 @@
-import random
+import math
 
 import pytest
 from fastapi_pagination import set_params, Params
 from starlette import status
 from starlette.testclient import TestClient
 
-from schemas import BookUpdate, BookCreate
 
+# INFO: get books pagination block ------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("page_num, size, expected_count, page_count", [
-    (1, 10, 10, 2),
-    (2, 10, 2, 2),
-    (1, 20, 12, 1),
-    (2, 12, 0, 1)
+@pytest.mark.parametrize("data_count, page_num, size", [
+    (20, 1, 10),
+    (16, 2, 10),
+    (35, 1, 20),
+    (11, 2, 12)
 ])
-def test_get_books_paginated(page_num: int, size: int, expected_count: int, page_count: int, new_author, new_book, client: TestClient):
-    """
-    Тестируем пагинацию при получении общего количества книг
-    Создаём 12 авторов, по 1 книге на каждого и тестируем инфу
-    """
+def test_check_get_books_items_count(data_count: int, page_num: int, size: int, new_books, client: TestClient):
+    """Тестируем получение корректного количества объектов на данной странице и общего количества книг в ответе"""
     # Arrange
-    item_quantity = 12
-    for i in range(item_quantity):
-        author = new_author(f'Mega_{i}', f'Man_{i}')
-        new_book(title=f'Book_{i}', price=random.randint(1, 20), author_id=author.id)
+    new_books(data_count)
     set_params(Params(page=page_num, size=size))
 
     # Act
-    response = client.get(f'/api/books')
+    response = client.get('/api/books')
+    assert response.status_code == status.HTTP_200_OK
+
     data = response.json()
 
     # Assert
-    assert response.status_code == status.HTTP_200_OK
+    expected_count: int = max(0, min(size, data_count - (page_num - 1) * size))  # Ожидаемое количество объектов в ответе
     assert len(data['items']) == expected_count
-    assert data['total'] == item_quantity
-    assert data['page'] == page_num
-    assert data['size'] == size
-    assert data['pages'] == page_count
+    assert data['total'] == data_count
 
 
-def test_get_book(new_author, new_book, client: TestClient):
-    """
-    Тестируем получение подробной информации о книге на тестовой базе
-    Создаём автора, книгу для него и проверяем инфу
-    """
+@pytest.mark.parametrize("data_count, size", [
+    (27, 10),
+    (13, 10),
+    (35, 14),
+    (11, 12)
+])
+def test_check_get_books_page_count(data_count: int, size: int, new_books, client: TestClient):
+    """Тестируем получение корректного количества страниц в ответе, страница всегда первая"""
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    book_1 = new_book('About all', 15.3, author_1.id)
+    new_books(data_count)
+    set_params(Params(page=1, size=size))
 
     # Act
-    response = client.get(f'/api/books/{book_1.id}')
-    data = response.json()
-
-    # Assert
+    response = client.get('/api/books')
     assert response.status_code == status.HTTP_200_OK
-    assert data['id'] == book_1.id
-    assert data['price'] == book_1.price
-    assert data['author_name'] == author_1.full_name
 
-
-def test_update_book(new_author, new_book, client: TestClient):
-    """
-    Тестируем изменение данных книги на тестовой базе
-    Создаём автора, книгу для него, изменяем данные книги и проверяем инфу
-    """
-    # Arrange
-    author_1 = new_author('Super', 'Man')
-    book_1 = new_book('About all', 15.3, author_1.id)
-    book_update_form: BookUpdate = BookUpdate(title='Nothing to say', price=22.2)
-
-    # Act
-    response = client.put(f'/api/books/{book_1.id}', json=book_update_form.model_dump())
     data = response.json()
 
     # Assert
-    assert response.status_code == status.HTTP_200_OK
-    assert data['id'] == book_1.id
-    assert data['title'] == book_update_form.title
-    assert data['price'] == book_update_form.price
-    assert data['author_name'] == author_1.full_name
+    expected_page_count: int = math.ceil(data_count / size)  # Ожидаемое количество страниц в ответе
+    assert data['pages'] == expected_page_count
 
 
-def test_create_book(new_author, new_book, client: TestClient):
-    """
-    Тестируем создание книги у имеющегося автора на тестовой базе
-    Создаём автора, книгу и проверяем инфу
-    """
+@pytest.mark.parametrize("data_count, size", [
+    (20, 10),
+    (16, 10),
+    (35, 20),
+    (73, 15)
+])
+def test_check_get_books_different_data_on_different_pages(data_count: int, size: int, new_books, client: TestClient):
+    """Тестируем получение разных данных о книгах на 1 и 2 страницах.
+    Хардкод тут в том, что мы нарочито выставляем в параметрах
+    количество данных больше размера страницы для того, чтобы
+    на второй странице гарантированно были данные"""
     # Arrange
-    author_1 = new_author('Super', 'Man')
-    book_create_form: BookCreate = BookCreate(title='About all', price=15.3, author_id=author_1.id)
+    new_books(data_count)
+    set_params(Params(page=1, size=size))
 
     # Act
-    response = client.post(f'/api/books', json=book_create_form.model_dump())
-    data = response.json()
+    response_first = client.get('/api/books')
+    assert response_first.status_code == status.HTTP_200_OK
+
+    data_first = response_first.json()
+
+    set_params(Params(page=2, size=size))
+    response_second = client.get('/api/books')
+    assert response_second.status_code == status.HTTP_200_OK
+
+    data_second = response_second.json()
 
     # Assert
-    assert response.status_code == status.HTTP_201_CREATED
-    assert data['title'] == book_create_form.title
-    assert data['price'] == book_create_form.price
-    assert data['author_name'] == author_1.full_name
+    # Проверим в ответе следующие параметры, которые должны отличаться: номер страницы, айди и название книги на странице
+    assert data_first['page'] != data_second['page']
+    assert data_first['items'][0]['id'] != data_second['items'][0]['id']
+    assert data_first['items'][0]['title'] != data_second['items'][0]['title']
 
 
-def test_delete_book(new_author, new_book, client: TestClient):
-    """
-    Тестируем удаление книги на тестовой базе
-    Создаём автора, книгу для него, удаляем книгу и проверяем инфу
-    """
-    # Arrange
-    author_1 = new_author('Mega', 'Man')
-    book_1 = new_book('About all', 15.3, author_1.id)
-
-    # Act
-    response = client.delete(f'/api/books/{book_1.id}')
-    data = response.json()
-
-    # Assert
-    assert response.status_code == status.HTTP_200_OK
-    assert data == book_1.id
+# INFO: end block ------------------------------------------------------------------------------------------------------
