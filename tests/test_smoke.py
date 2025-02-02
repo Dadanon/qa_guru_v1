@@ -25,7 +25,7 @@ def test_envs():
     assert os.getenv('DATABASE_URL') is not None
 
 
-@pytest.fixture(scope="module", name='db_connection')
+@pytest.fixture(scope="module")
 def db_connection():
     dotenv.load_dotenv()
     database_url = os.getenv('DATABASE_URL')

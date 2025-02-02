@@ -12,8 +12,8 @@ from models import Author, check_model, Book
 from schemas import AuthorDetail, BookDetail
 
 
-@pytest.fixture(name='session')
-def session_fixture():
+@pytest.fixture
+def session():
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -24,8 +24,8 @@ def session_fixture():
         yield session
 
 
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
+@pytest.fixture
+def client(session: Session):
     def get_session_override():
         return session
 
@@ -36,8 +36,8 @@ def client_fixture(session: Session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(name="new_author")
-def new_author_fixture(session: Session):
+@pytest.fixture
+def new_author(session: Session):
     """Создаём нового автора"""
     def _new_author(first_name: str, last_name: str):
         author = Author(first_name=first_name, last_name=last_name)
@@ -49,8 +49,8 @@ def new_author_fixture(session: Session):
     yield _new_author
 
 
-@pytest.fixture(name="new_authors")
-def new_authors_fixture(new_author):
+@pytest.fixture
+def new_authors(new_author):
     """Создаём некоторое количество новых авторов"""
     def _new_authors(author_quantity: int):
         if author_quantity <= 1:
@@ -64,8 +64,8 @@ def new_authors_fixture(new_author):
     yield _new_authors
 
 
-@pytest.fixture(name="new_book")
-def new_book_fixture(session: Session):
+@pytest.fixture
+def new_book(session: Session):
     """Создаём новую книгу"""
     def _new_book(title: str, price: float, author_id: int):
         check_model(session, Author, author_id)
@@ -78,8 +78,8 @@ def new_book_fixture(session: Session):
     yield _new_book
 
 
-@pytest.fixture(name="new_books")
-def new_books_fixture(new_book, new_author):
+@pytest.fixture
+def new_books(new_book, new_author):
     """Создаём некоторое количество новых книг одного автора. Возвращаем id этого автора"""
     def _new_books(book_quantity: int):
         if book_quantity < 1:

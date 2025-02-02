@@ -85,8 +85,12 @@ def test_check_get_books_different_data_on_different_pages(data_count: int, size
     # Assert
     # Проверим в ответе следующие параметры, которые должны отличаться: номер страницы, айди и название книги на странице
     assert data_first['page'] != data_second['page']
-    assert data_first['items'][0]['id'] != data_second['items'][0]['id']
-    assert data_first['items'][0]['title'] != data_second['items'][0]['title']
+    first_page_items_sorted = sorted(data_first['items'], key=lambda item: item['id'])
+    second_page_items_sorted = sorted(data_second['items'], key=lambda item: item['id'])
+    print(f'data first_page_items_sorted = {first_page_items_sorted}')
+    for i in range(min(len(first_page_items_sorted), len(second_page_items_sorted))):
+        assert first_page_items_sorted[i]['id'] != second_page_items_sorted[i]['id']
+        assert first_page_items_sorted[i]['title'] != second_page_items_sorted[i]['title']
 
 
 # INFO: end block ------------------------------------------------------------------------------------------------------
