@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: $(DOCKER_DATABASE_USER)
+      POSTGRES_PASSWORD: $(DOCKER_DATABASE_PASSWORD)
+      POSTGRES_DB: $(DOCKER_DATABASE_DB_NAME)
+    ports:
+      - '5434:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
