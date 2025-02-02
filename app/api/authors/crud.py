@@ -1,7 +1,5 @@
-from typing import Optional
-
-from schemas import AuthorListed, AuthorDetail, BookList, BookListed, AuthorUpdate, AuthorCreate
-from models import *
+from app.schemas import AuthorListed, BookListed
+from app.models.models import *
 
 
 def get_authors(db: Session) -> List[AuthorListed]:

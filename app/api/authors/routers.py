@@ -5,11 +5,10 @@ from fastapi_pagination import Page, paginate
 from fastapi_pagination.utils import disable_installed_extensions_check
 
 
-from models import get_result
-from schemas import AuthorListed, AuthorDetail, AuthorUpdate, AuthorCreate, BookListed
 from . import crud
-from database import get_db
-
+from app.models.database import get_db
+from app.models.models import get_result
+from app.schemas import AuthorListed, BookListed
 
 router = APIRouter(prefix="/api/authors", tags=["Authors"])
 

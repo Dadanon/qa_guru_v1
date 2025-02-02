@@ -6,10 +6,10 @@ from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import Session
 from starlette.testclient import TestClient
 
-from database import Base, get_db
-from main import app
-from models import Author, check_model, Book
-from schemas import AuthorDetail, BookDetail
+from app.models.database import Base, get_db
+from app.main import app
+from app.models.models import Author, check_model, Book
+from app.schemas import AuthorDetail, BookDetail
 
 
 @pytest.fixture(name='session')

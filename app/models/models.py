@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import Integer, ForeignKey, String, Float, exists
 from sqlalchemy.orm import Mapped, mapped_column, relationship, Session
 
-from database import Base
+from .database import Base
 
 
 S = TypeVar('S')

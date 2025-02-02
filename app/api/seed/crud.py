@@ -2,8 +2,8 @@ import random
 
 from sqlalchemy.orm import Session
 
-from models import Author, Book
-from schemas import BaseResponse
+from app.models.models import Author, Book
+from app.schemas import BaseResponse
 
 SEED_LENGTH = 12
 """Длина сид данных"""

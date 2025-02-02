@@ -1,9 +1,5 @@
-from typing import Optional
-
-from sqlalchemy import and_
-
-from schemas import BookListed, BookDetail, BookUpdate, BookCreate
-from models import *
+from app.schemas import BookListed
+from app.models.models import *
 
 
 def get_books(db: Session) -> List[BookListed]:

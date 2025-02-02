@@ -4,10 +4,10 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from sqlalchemy.orm import Session
 from fastapi import status
 
-from models import get_result
-from schemas import BookListed
+from app.models.models import get_result
+from app.schemas import BookListed
 from . import crud
-from database import get_db
+from app.models.database import get_db
 
 
 router = APIRouter(prefix="/api/books", tags=["Books"])
