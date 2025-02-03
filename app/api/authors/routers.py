@@ -8,9 +8,14 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from . import crud
 from app.models.database import get_db
 from app.models.models import get_result
-from app.schemas import AuthorListed, BookListed
+from app.schemas import AuthorListed, BookListed, AuthorDetail
 
 router = APIRouter(prefix="/api/authors", tags=["Authors"])
+
+
+@router.get('/{author_id}', response_model=AuthorDetail)
+def get_author(author_id: int, db: Session = Depends(get_db)):
+    return get_result(db, crud.get_author, author_id)
 
 
 @router.get('', response_model=Page[AuthorListed], status_code=status.HTTP_200_OK)

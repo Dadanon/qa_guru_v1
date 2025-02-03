@@ -7,11 +7,11 @@ from sqlmodel import Session
 
 load_dotenv(".env")
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
-if not SQLALCHEMY_DATABASE_URL:
-    raise Exception("Missing DATABASE_URL environment variable")
+SQLMODEL_DATABASE_URL = os.getenv("DOCKER_DATABASE_URL")
+if not SQLMODEL_DATABASE_URL:
+    raise Exception("Missing DOCKER_DATABASE_URL environment variable")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(SQLMODEL_DATABASE_URL, pool_size=os.getenv('DATABASE_POOL_SIZE', 10))
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,

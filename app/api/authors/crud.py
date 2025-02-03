@@ -1,5 +1,17 @@
-from app.schemas import AuthorListed, BookListed
-from app.models.models import *
+from fastapi import HTTPException
+from starlette import status
+
+from app.schemas import AuthorListed, BookListed, AuthorDetail
+from app.models.models import Session
+from typing import List
+from app.models.models import Author, Book, check_model
+
+
+def get_author(db: Session, author_id: int) -> AuthorDetail:
+    db_author = db.get(Author, author_id)
+    if not db_author:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Author not found')
+    return AuthorDetail.model_validate(db_author)
 
 
 def get_authors(db: Session) -> List[AuthorListed]:
