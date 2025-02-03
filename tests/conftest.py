@@ -1,12 +1,14 @@
+import os
 import random
 from typing import List
 
+import dotenv
 import pytest
-from sqlalchemy import create_engine, StaticPool
-from sqlalchemy.orm import Session
+from sqlalchemy import StaticPool
+from sqlmodel import create_engine, SQLModel, Session
 from starlette.testclient import TestClient
 
-from app.models.database import Base, get_db
+from app.models.database import get_db
 from app.main import app
 from app.models.models import Author, check_model, Book
 from app.schemas import AuthorDetail, BookDetail
@@ -19,7 +21,7 @@ def session_fixture():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool
     )
-    Base.metadata.create_all(bind=engine)
+    SQLModel.metadata.create_all(bind=engine)
     with Session(engine) as session:
         yield session
 
@@ -92,3 +94,12 @@ def new_books_fixture(new_book, new_author):
         return author.id
 
     yield _new_books
+
+
+@pytest.fixture(scope="module", name='db_connection')
+def db_connection():
+    dotenv.load_dotenv()
+    database_url = os.getenv('DOCKER_DATABASE_URL')
+    engine = create_engine(database_url)
+    with Session(engine) as connection:
+        yield connection

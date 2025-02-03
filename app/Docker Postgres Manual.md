@@ -32,6 +32,7 @@ volumes:
 ```bash
 docker-compose up -d 
 ```
+Перед этим запустите Docker Desktop, если вы работаете на Windows, он запускает docker сервис и делает возможным запуск команды docker-compose
 4. Проверьте работу контейнера командой ```docker ps```. Строка списка запущенных контейнеров, описывающая работающий postgres, должна выглядеть примерно так:
 ```
 CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS          PORTS                    NAMES

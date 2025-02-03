@@ -1,10 +1,9 @@
 from fastapi import HTTPException
 from starlette import status
 
-from app.schemas import AuthorListed, BookListed, AuthorDetail
+from app.schemas import AuthorDetail
 from app.models.models import Session
-from typing import List
-from app.models.models import Author, Book, check_model
+from app.models.models import Author
 
 
 def get_author(db: Session, author_id: int) -> AuthorDetail:
@@ -14,12 +13,10 @@ def get_author(db: Session, author_id: int) -> AuthorDetail:
     return AuthorDetail.model_validate(db_author)
 
 
-def get_authors(db: Session) -> List[AuthorListed]:
-    db_authors: List[Author] = db.query(Author).all()
-    return [AuthorListed.model_validate(author) for author in db_authors]
-
-
-def get_author_books(db: Session, author_id: int) -> List[BookListed]:
-    check_model(db, Author, author_id)
-    db_author_books: List[Book] = db.query(Book).filter_by(author_id=author_id).all()
-    return [BookListed.model_validate(book) for book in db_author_books]
+def create_author(db: Session, author: Author) -> Author:
+    if author.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Cannot create author with provided id')
+    db.add(author)
+    db.commit()
+    db.refresh(author)
+    return author

@@ -6,11 +6,12 @@ from sqlalchemy import pool
 import os
 
 from alembic import context
-from app.models.models import Base
+from sqlmodel import SQLModel
+from app.models.models import *
 
 load_dotenv(".env")
 
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+SQLALCHEMY_DATABASE_URL = os.getenv("DOCKER_DATABASE_URL")
 
 
 # получаем значение DATABASE_URL из переменной окружения
@@ -30,7 +31,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

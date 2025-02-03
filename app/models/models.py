@@ -1,11 +1,8 @@
 from typing import List, Callable, TypeVar, Type
 
 from fastapi import HTTPException
-from sqlalchemy import Integer, ForeignKey, String, Float, exists
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlmodel import Session, SQLModel, Field
-
-from .database import Base
+from sqlalchemy import exists
+from sqlmodel import Session, SQLModel, Field, Relationship
 
 
 class DefaultBase(SQLModel, table=False):
@@ -33,24 +30,22 @@ def get_result(db: Session, function: Callable[..., S], *args, **kwargs) -> S:
 class Author(DefaultBase, table=True):
     __tablename__ = 'authors'
 
-    first_name: Mapped[str] = mapped_column(String, nullable=False)
-    last_name: Mapped[str] = mapped_column(String, nullable=False)
+    first_name: str = Field(nullable=False)
+    last_name: str = Field(nullable=False)
 
-    books: Mapped[List['Book']] = relationship(
-        'Book',
+    books: List['Book'] = Relationship(
         back_populates='author',
-        cascade='all, delete-orphan'
+        cascade_delete=True
     )
 
 
 class Book(DefaultBase, table=True):
     __tablename__ = 'books'
 
-    title: Mapped[str] = mapped_column(String, nullable=False)
-    price: Mapped[float] = mapped_column(Float, nullable=False)
-    author_id: Mapped[int] = mapped_column(Integer, ForeignKey('authors.id'), nullable=False)
+    title: str = Field(nullable=False)
+    price: float = Field(nullable=False)
+    author_id: int = Field(foreign_key='authors.id', nullable=False)
 
-    author: Mapped['Author'] = relationship(
-        'Author',
+    author: 'Author' = Relationship(
         back_populates='books'
     )

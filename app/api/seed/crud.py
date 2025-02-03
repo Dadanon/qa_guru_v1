@@ -1,6 +1,6 @@
 import random
 
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from app.models.models import Author, Book
 from app.schemas import BaseResponse
