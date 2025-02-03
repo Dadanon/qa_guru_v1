@@ -2,13 +2,18 @@ from typing import List, Callable, TypeVar, Type
 
 from fastapi import HTTPException
 from sqlalchemy import Integer, ForeignKey, String, Float, exists
-from sqlalchemy.orm import Mapped, mapped_column, relationship, Session
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlmodel import Session, SQLModel, Field
 
 from .database import Base
 
 
+class DefaultBase(SQLModel, table=False):
+    id: int | None = Field(default=None, primary_key=True)
+
+
 S = TypeVar('S')
-T = TypeVar('T', bound=Base)  # Return any Base-derived class
+T = TypeVar('T', bound=DefaultBase)  # Return any DefaultBase-derived class
 
 
 def check_model(db: Session, model_type: Type[T], model_id: int) -> None:
@@ -25,10 +30,9 @@ def get_result(db: Session, function: Callable[..., S], *args, **kwargs) -> S:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 
-class Author(Base):
+class Author(DefaultBase, table=True):
     __tablename__ = 'authors'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     first_name: Mapped[str] = mapped_column(String, nullable=False)
     last_name: Mapped[str] = mapped_column(String, nullable=False)
 
@@ -39,10 +43,9 @@ class Author(Base):
     )
 
 
-class Book(Base):
+class Book(DefaultBase, table=True):
     __tablename__ = 'books'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float] = mapped_column(Float, nullable=False)
     author_id: Mapped[int] = mapped_column(Integer, ForeignKey('authors.id'), nullable=False)

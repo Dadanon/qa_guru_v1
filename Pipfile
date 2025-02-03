@@ -15,6 +15,7 @@ psycopg2 = "*"
 uvicorn = "*"
 httpx = "*"
 fastapi-pagination = "*"
+sqlmodel = "*"
 
 [dev-packages]
 

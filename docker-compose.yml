@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
+    restart: always
     env_file: .env
     environment:
       POSTGRES_USER: ${DOCKER_DATABASE_USER}
