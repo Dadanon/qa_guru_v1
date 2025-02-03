@@ -4,8 +4,7 @@ from sqlmodel import Session
 
 from . import crud
 from app.models.database import get_db
-from app.models.models import get_result, Author
-from app.schemas import AuthorDetail
+from app.models.models import get_result, Author, AuthorBase, AuthorDetail
 
 router = APIRouter(prefix="/api/authors", tags=["Authors"])
 
@@ -16,5 +15,5 @@ def get_author(author_id: int, db: Session = Depends(get_db)):
 
 
 @router.post('', response_model=Author)
-def create_author(author: Author, db: Session = Depends(get_db)):
+def create_author(author: AuthorBase, db: Session = Depends(get_db)):
     return get_result(db, crud.create_author, author)
