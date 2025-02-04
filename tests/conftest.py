@@ -1,7 +1,10 @@
 import os
+from typing import Type
 
 import pytest
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from pydantic_core import ValidationError
 from sqlmodel import create_engine, SQLModel, Session
 from starlette.testclient import TestClient
 
@@ -11,6 +14,13 @@ from app.models.models import Author
 
 
 load_dotenv('.env')
+
+
+def validate_model(model: Type[BaseModel], validator: Type[BaseModel]):
+    try:
+        validator.model_validate(model)
+    except ValidationError:
+        raise AssertionError(f'Invalid model: {model.__name__}')
 
 
 @pytest.fixture
@@ -35,10 +45,10 @@ def client(session: Session):
 
 
 @pytest.fixture
-def new_author(session: Session):
+def new_author(session: Session, faker):
     """Создаём нового автора"""
-    def _new_author(first_name: str, last_name: str):
-        author: Author = Author(first_name=first_name, last_name=last_name)
+    def _new_author():
+        author: Author = Author(first_name=faker.first_name(), last_name=faker.last_name())
         session.add(author)
         session.commit()
         session.refresh(author)

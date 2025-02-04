@@ -16,6 +16,7 @@ uvicorn = "*"
 httpx = "*"
 fastapi-pagination = "*"
 sqlmodel = "*"
+faker = "*"
 
 [dev-packages]
 

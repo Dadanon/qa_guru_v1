@@ -2,6 +2,7 @@ import os
 
 import pytest
 from dotenv import load_dotenv
+from sqlalchemy import text
 
 load_dotenv(".env")
 
@@ -17,4 +18,8 @@ def test_docker_database_url_availability():
 
 @pytest.mark.smoke
 def test_db_availability(session):
-    ...
+    # Act
+    response = session.exec(text("SELECT 1;"))
+
+    # Assert
+    assert response is not None
