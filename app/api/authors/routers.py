@@ -17,3 +17,13 @@ def get_author(author_id: int, db: Session = Depends(get_db)):
 @router.post('', response_model=Author)
 def create_author(author: AuthorBase, db: Session = Depends(get_db)):
     return get_result(db, crud.create_author, author)
+
+
+@router.delete('/{author_id}', response_model=int)
+def delete_author(author_id: int, db: Session = Depends(get_db)):
+    return get_result(db, crud.delete_author, author_id)
+
+
+@router.patch('/{author_id}', response_model=Author)
+def update_author(author_id: int, author: AuthorBase, db: Session = Depends(get_db)):
+    return get_result(db, crud.update_author, author_id, author)
