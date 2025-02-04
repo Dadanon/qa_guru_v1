@@ -24,7 +24,7 @@ def delete_author(db: Session, author_id: int) -> int:
     """Возвращаем id удаленного автора, например, для фильтрации списка авторов или проверки, что автор отсутствует в БД после удаления"""
     db_author: Author | None = db.get(Author, author_id)
     if not db_author:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Cannot delete author that does not exist')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found, cannot delete')
     db.delete(db_author)
     db.commit()
     return db_author.id
