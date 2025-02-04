@@ -132,3 +132,45 @@ docker exec -it <container_name> psql -U <user_name> -d <db_name>
 \dt
 ```
 Команда должна вывести список, в котором будут таблицы authors и books. Это значит, что миграция прошла корректно.
+
+---
+
+Определимся с набором тестов. У нас 4 эндпоинта для автора: получение по id, создание, удаление, изменение. Соответственно, нам нужно по тесту на каждый случай.
+
+Используем faker для генерации first_name и last_name у автора. Установим пакет:
+```
+pipenv install faker
+```
+Переопределим встроенную фикстуру faker, чтобы он возвращал нам разные данные, добавив зависимость сида faker от текущего времени:
+```python
+@pytest.fixture
+def faker():
+    faker = Faker()
+    faker.seed_instance(int(time.time()))
+    return faker
+```
+Добавим простую функцию для валидации пришедшего из эндпоинта ответа, пробросив AssertionError вместо ValidationError:
+```python
+def validate_model(model: Type[BaseModel], validator: Type[BaseModel]):
+    try:
+        validator.model_validate(model)
+    except ValidationError:
+        raise AssertionError(f'Invalid model: {model.__name__}')
+```
+Создадим фикстуру сессии для тестовой БД (возьмем SQLite), чтобы не засорять прод:
+```python
+@pytest.fixture
+def session():
+    """Делаем тесты на любой базе, выбираем sqlite"""
+    sqlmodel_database_url = 'sqlite://'
+    engine = create_engine(sqlmodel_database_url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+```
+Напоследок сделаем фикстуры клиента, использующего вышеуказанную фикстуру сессии, фикстуру для создания нового автора (в эндпоинтах DELETE, PATCH, GET) и фикстуру создания формы пользователя (для эндпоинтов CREATE, PATCH).
+
+Тесты для авторов находятся в файле tests/test_authors.py/
+
+---
+

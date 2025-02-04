@@ -5,11 +5,11 @@ from app.models.models import Session, AuthorBase, AuthorDetail
 from app.models.models import Author
 
 
-def get_author(db: Session, author_id: int) -> AuthorDetail:
+def get_author(db: Session, author_id: int) -> Author:
     db_author: Author | None = db.get(Author, author_id)
     if not db_author:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Author not found')
-    return AuthorDetail.model_validate(db_author)
+    return db_author
 
 
 def create_author(db: Session, author: AuthorBase) -> Author:
