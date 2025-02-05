@@ -1,8 +1,7 @@
-from typing import List, Callable, TypeVar, Type
+from typing import List, Callable, TypeVar
 
 from fastapi import HTTPException
 from pydantic import computed_field
-from sqlalchemy import exists
 from sqlmodel import Session, SQLModel, Field, Relationship
 
 
@@ -11,13 +10,6 @@ class DefaultBase(SQLModel):
 
 
 S = TypeVar('S')
-T = TypeVar('T', bound=DefaultBase)  # Return any DefaultBase-derived class
-
-
-def check_model(db: Session, model_type: Type[T], model_id: int) -> None:
-    model_exists = db.query(exists().where(model_type.id == model_id)).scalar()
-    if not model_exists:
-        raise HTTPException(status_code=404, detail=f'{model_type.__name__} not found by id {model_id}')
 
 
 def get_result(db: Session, function: Callable[..., S], *args, **kwargs) -> S:

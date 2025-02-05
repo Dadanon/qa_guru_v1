@@ -1,6 +1,5 @@
 import pytest
 from starlette import status
-from starlette.testclient import TestClient
 
 from app.models.models import Author
 from tests.conftest import validate_model
@@ -51,13 +50,19 @@ def test_delete_author(new_author, client):
     db_author = new_author()
 
     # Act
-    response = client.delete(f'/api/authors/{db_author.id}')
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    delete_response = client.delete(f'/api/authors/{db_author.id}')
+    assert delete_response.status_code == status.HTTP_200_OK
+    delete_data = delete_response.json()
 
     # Act
-    assert isinstance(data, int)
-    assert data == db_author.id
+    assert isinstance(delete_data, int)
+    assert delete_data == db_author.id
+
+    # Act (after delete)
+    get_after_delete_response = client.get(f'/api/authors/{delete_data}')
+
+    # Assert (after delete)
+    assert get_after_delete_response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_update_author(new_author, new_author_data, client):

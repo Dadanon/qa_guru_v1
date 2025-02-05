@@ -4,7 +4,7 @@ from starlette import status
 
 from . import crud
 from app.models.database import get_db
-from app.models.models import get_result, Author, AuthorBase, AuthorDetail
+from app.models.models import get_result, Author, AuthorBase
 
 router = APIRouter(prefix="/api/authors", tags=["Authors"])
 

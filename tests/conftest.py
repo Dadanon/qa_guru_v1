@@ -1,4 +1,3 @@
-import os
 import time
 from typing import Type
 
@@ -13,7 +12,7 @@ from starlette.testclient import TestClient
 
 from app.models.database import get_db
 from app.main import app
-from app.models.models import Author, AuthorDetail, AuthorBase
+from app.models.models import Author, AuthorBase
 
 load_dotenv('.env')
 

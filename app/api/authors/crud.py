@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from starlette import status
 
-from app.models.models import Session, AuthorBase, AuthorDetail
+from app.models.models import Session, AuthorBase
 from app.models.models import Author
 
 
