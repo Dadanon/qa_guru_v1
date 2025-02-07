@@ -4,19 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
 pytest = "*"
 pydantic = "*"
 requests = "*"
 alembic = "*"
-psycopg2 = "*"
 uvicorn = "*"
 httpx = "*"
 fastapi-pagination = "*"
 sqlmodel = "*"
 faker = "*"
+psycopg2-binary = "*"
+fastapi = {extras = ["standard"], version = "*"}
+psycopg2 = "*"
 
 [dev-packages]
 

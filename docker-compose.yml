@@ -1,5 +1,16 @@
 services:
-  postgres:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DOCKER_DATABASE_URL: postgresql+psycopg2://${DOCKER_DATABASE_USER}:${DOCKER_DATABASE_PASSWORD}@db:5432/${DOCKER_DATABASE_DB_NAME}
+    ports:
+      - 8002:80
+    depends_on:
+      - db
+    volumes:
+      - .:/code
+  db:
     image: postgres:17-alpine
     restart: always
     env_file: .env
@@ -8,7 +19,7 @@ services:
       POSTGRES_PASSWORD: ${DOCKER_DATABASE_PASSWORD}
       POSTGRES_DB: ${DOCKER_DATABASE_DB_NAME}
     ports:
-      - '5434:5432'
+      - 5434:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
 volumes:
