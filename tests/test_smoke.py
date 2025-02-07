@@ -11,7 +11,6 @@ load_dotenv(".env")
 def test_docker_database_url_availability():
     # Act
     sqlmodel_database_url = os.getenv("DOCKER_DATABASE_URL")
-
     # Assert
     assert sqlmodel_database_url is not None
 
@@ -19,7 +18,6 @@ def test_docker_database_url_availability():
 @pytest.mark.smoke
 def test_db_availability(session):
     # Act
-    response = session.exec(text("SELECT 1;"))
-
+    response = session.exec(text("SELECT 1;")).one()
     # Assert
     assert response is not None

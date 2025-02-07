@@ -10,6 +10,7 @@ services:
       - db
     volumes:
       - .:/code
+    command: bash -c "alembic upgrade head && fastapi run app/main.py --port 80"
   db:
     image: postgres:17-alpine
     restart: always
